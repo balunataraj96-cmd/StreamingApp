@@ -1,37 +1,37 @@
 pipeline {
     agent any
+    environment {
+        AWS_ACCOUNT_ID = '259183056581'
+        AWS_DEFAULT_REGION = 'us-east-1'
+    }
     stages {
         stage('Checkout Code') {
             steps {
-                echo 'Pulling latest code updates from GitHub...'
+                echo 'Pulling latest repository updates from GitHub...'
             }
         }
-        stage('Docker and AWS Task Execution') {
-            agent {
-                docker {
-                    image 'amazon/aws-cli:latest'
-                    args '-v /var/run/docker.sock:/var/run/docker.sock'
-                }
-            }
+        stage('Compile and Push All Services') {
             steps {
+                // 1. We run commands inside the AWS CLI container directly using an on-the-fly execution mapping
                 withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-credentials']]) {
-                    // 1. Authenticate with ECR
-                    sh 'aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 259183056581.dkr.ecr.us-east-1.amazonaws.com'
                     
-                    // 2. Build and Push Hello Service
-                    sh 'cd backend/helloService && docker build -t streaming-hello-service .'
-                    sh 'docker tag streaming-hello-service:latest ://amazonaws.com'
-                    sh 'docker push ://amazonaws.com'
+                    echo 'Logging into Amazon ECR Private Vault...'
+                    sh "sudo docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -e AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} -e AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} amazon/aws-cli ecr get-login-password --region ${AWS_DEFAULT_REGION} | sudo docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com"
                     
-                    // 3. Build and Push Profile Service
-                    sh 'cd backend/profileService && docker build -t streaming-profile-service .'
-                    sh 'docker tag streaming-profile-service:latest ://amazonaws.com'
-                    sh 'docker push ://amazonaws.com'
+                    echo 'Building and Pushing Hello Service...'
+                    sh "cd backend/helloService && sudo docker build -t streaming-hello-service ."
+                    sh "sudo docker tag streaming-hello-service:latest ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}://"
+                    sh "sudo docker push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}://"
                     
-                    // 4. Build and Push Frontend
-                    sh 'cd frontend && docker build -t streaming-frontend .'
-                    sh 'docker tag streaming-frontend:latest ://amazonaws.com'
-                    sh 'docker push ://amazonaws.com'
+                    echo 'Building and Pushing Profile Service...'
+                    sh "cd backend/profileService && sudo docker build -t streaming-profile-service ."
+                    sh "sudo docker tag streaming-profile-service:latest ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}://"
+                    sh "sudo docker push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}://"
+                    
+                    echo 'Building and Pushing Frontend Application...'
+                    sh "cd frontend && sudo docker build -t streaming-frontend ."
+                    sh "sudo docker tag streaming-frontend:latest ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}://"
+                    sh "sudo docker push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}://"
                 }
             }
         }
