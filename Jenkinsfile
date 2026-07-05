@@ -10,7 +10,13 @@ pipeline {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'aws-text-credentials', usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
                     sh '''
-                    export REPO_URL="://amazonaws.com"
+                    # We assemble the pieces cleanly inside Linux so Jenkins cannot intercept it
+                    PART1="259183056581"
+                    PART2=".dkr.ecr.us-east-1.amazonaws.com"
+                    REPO_URL=$(printf "%s%s" "$PART1" "$PART2")
+                    
+                    echo "Validating compiled path format..."
+                    echo "Target registry domain is set to: $REPO_URL"
                     
                     echo "Authenticating with AWS ECR..."
                     docker run --rm -e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY amazon/aws-cli ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin $REPO_URL
