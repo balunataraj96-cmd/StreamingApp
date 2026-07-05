@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: streaming-frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: streaming-frontend
+  template:
+    metadata:
+      labels:
+        app: streaming-frontend
+    spec:
+      imagePullSecrets:
+        - name: aws-ecr-secret
+      containers:
+        - name: streaming-frontend
+          image: 259183056581.dkr.ecr.us-east-1.amazonaws.com/streaming-frontend:latest
+          ports:
+            - containerPort: 80
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: streaming-hello-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: streaming-hello-service
+  template:
+    metadata:
+      labels:
+        app: streaming-hello-service
+    spec:
+      imagePullSecrets:
+        - name: aws-ecr-secret
+      containers:
+        - name: streaming-hello-service
+          image: 259183056581.dkr.ecr.us-east-1.amazonaws.com/streaming-frontend:latest
+          ports:
+            - containerPort: 5001
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: streaming-profile-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: streaming-profile-service
+  template:
+    metadata:
+      labels:
+        app: streaming-profile-service
+    spec:
+      imagePullSecrets:
+        - name: aws-ecr-secret
+      containers:
+        - name: streaming-profile-service
+          image: 259183056581.dkr.ecr.us-east-1.amazonaws.com/streaming-frontend:latest
+          ports:
+            - containerPort: 5002

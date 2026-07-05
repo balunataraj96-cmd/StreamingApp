@@ -1,0 +1,23 @@
+replicaCount: 1
+
+# We split the registry fields up to bypass the chat link-hiding glitch completely
+registry:
+  account: "259183056581"
+  domain: "dkr.ecr"
+  region: "us-east-1"
+  suffix: "amazonaws.com"
+
+frontend:
+  name: streaming-frontend
+  containerPort: 80
+  servicePort: 80
+
+helloService:
+  name: streaming-hello-service
+  containerPort: 5001
+  servicePort: 5001
+
+profileService:
+  name: streaming-profile-service
+  containerPort: 5002
+  servicePort: 5002
