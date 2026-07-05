@@ -1,9 +1,5 @@
 pipeline {
     agent any
-    environment {
-        AWS_ACCOUNT_ID = '259183056581'
-        AWS_DEFAULT_REGION = 'us-east-1'
-    }
     stages {
         stage('Checkout Code') {
             steps {
@@ -15,7 +11,7 @@ pipeline {
                 withCredentials([usernamePassword(credentialsId: 'aws-text-credentials', usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
                     
                     echo 'Authenticating with AWS ECR using Container Runtime Bridge...'
-                    sh "docker run --rm -e AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} -e AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} amazon/aws-cli ecr get-login-password --region ${AWS_DEFAULT_REGION} | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com"
+                    sh "docker run --rm -e AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} -e AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} amazon/aws-cli ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 259183056581.dkr.ecr.us-east-1.amazonaws.com"
                     
                     echo 'Building and Pushing Hello Service...'
                     sh 'cd backend/helloService && docker build -t streaming-hello-service .'
